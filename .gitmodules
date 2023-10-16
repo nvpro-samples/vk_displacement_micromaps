@@ -1,0 +1,8 @@
+[submodule "external/bary_core"]
+	path = external/bary_core
+	url = https://github.com/NVIDIAGameWorks/Displacement-MicroMap-BaryFile.git
+	branch = main
+[submodule "external/cgltf"]
+	path = external/cgltf
+	url = https://github.com/pixeljetstream/cgltf.git
+	branch = nvidia/micromap

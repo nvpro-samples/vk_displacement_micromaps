@@ -1,0 +1,25 @@
+#############################
+# generic
+#############################
+
+*.bak
+
+#############################
+# spirv/sass
+#############################
+
+*.spv
+*.spva
+*.sass
+*.sassbin
+
+#############################
+#specific to the project
+#############################
+
+cmake_built
+cmake_build
+build
+_install
+bin_x64
+downloaded_resources
