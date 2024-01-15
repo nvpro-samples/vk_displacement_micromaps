@@ -20,7 +20,7 @@
 #pragma once
 
 
-#include <nvmath/nvmath.h>
+#include <glm/glm.hpp>
 #include <vector>
 #include <string>
 
@@ -38,58 +38,58 @@ struct MeshMaterial
 {
   std::string name;
 
-  nvmath::vec3f diffuse{1.0f};
+  glm::vec3 diffuse{1.0f};
 
   uint32_t normalMapTextureID = MeshSetID::INVALID;
 };
 
 struct MeshAttributes
 {
-  std::vector<nvmath::vec3f> positions;
-  std::vector<nvmath::vec3f> normals;
+  std::vector<glm::vec3> positions;
+  std::vector<glm::vec3> normals;
 
   // optional
-  std::vector<nvmath::vec2f> texcoords0;
-  std::vector<nvmath::vec3f> tangents;
-  std::vector<nvmath::vec3f> bitangents;
+  std::vector<glm::vec2> texcoords0;
+  std::vector<glm::vec3> tangents;
+  std::vector<glm::vec3> bitangents;
 
   // displacement (lo poly only)
-  std::vector<nvmath::vec3f> directions;
-  std::vector<nvmath::vec2f> directionBounds;
+  std::vector<glm::vec3> directions;
+  std::vector<glm::vec2> directionBounds;
 };
 
 struct MeshBBox
 {
-  nvmath::vec3f mins{FLT_MAX, FLT_MAX, FLT_MAX};
-  nvmath::vec3f maxs{-FLT_MAX, -FLT_MAX, -FLT_MAX};
+  glm::vec3 mins{FLT_MAX, FLT_MAX, FLT_MAX};
+  glm::vec3 maxs{-FLT_MAX, -FLT_MAX, -FLT_MAX};
 
-  inline void merge(const nvmath::vec3f& point)
+  inline void merge(const glm::vec3& point)
   {
-    mins = nvmath::nv_min(mins, point);
-    maxs = nvmath::nv_max(maxs, point);
+    mins = glm::min(mins, point);
+    maxs = glm::max(maxs, point);
   }
 
   inline void merge(const MeshBBox& bbox)
   {
-    mins = nvmath::nv_min(mins, bbox.mins);
-    maxs = nvmath::nv_max(maxs, bbox.maxs);
+    mins = glm::min(mins, bbox.mins);
+    maxs = glm::max(maxs, bbox.maxs);
   }
 
-  inline nvmath::vec3f diagonal() const { return maxs - mins; }
+  inline glm::vec3 diagonal() const { return maxs - mins; }
 
-  inline MeshBBox transformed(const nvmath::mat4f& matrix) const
+  inline MeshBBox transformed(const glm::mat4& matrix) const
   {
     int           i;
-    nvmath::vec4f box[16];
+    glm::vec4 box[16];
     // create box corners
-    box[0] = nvmath::vec4f(mins.x, mins.y, mins.z, 1.0f);
-    box[1] = nvmath::vec4f(maxs.x, mins.y, mins.z, 1.0f);
-    box[2] = nvmath::vec4f(mins.x, maxs.y, mins.z, 1.0f);
-    box[3] = nvmath::vec4f(maxs.x, maxs.y, mins.z, 1.0f);
-    box[4] = nvmath::vec4f(mins.x, mins.y, maxs.z, 1.0f);
-    box[5] = nvmath::vec4f(maxs.x, mins.y, maxs.z, 1.0f);
-    box[6] = nvmath::vec4f(mins.x, maxs.y, maxs.z, 1.0f);
-    box[7] = nvmath::vec4f(maxs.x, maxs.y, maxs.z, 1.0f);
+    box[0] = glm::vec4(mins.x, mins.y, mins.z, 1.0f);
+    box[1] = glm::vec4(maxs.x, mins.y, mins.z, 1.0f);
+    box[2] = glm::vec4(mins.x, maxs.y, mins.z, 1.0f);
+    box[3] = glm::vec4(maxs.x, maxs.y, mins.z, 1.0f);
+    box[4] = glm::vec4(mins.x, mins.y, maxs.z, 1.0f);
+    box[5] = glm::vec4(maxs.x, mins.y, maxs.z, 1.0f);
+    box[6] = glm::vec4(mins.x, maxs.y, maxs.z, 1.0f);
+    box[7] = glm::vec4(maxs.x, maxs.y, maxs.z, 1.0f);
 
     // transform box corners
     // and find new mins,maxs
@@ -97,7 +97,7 @@ struct MeshBBox
 
     for(i = 0; i < 8; i++)
     {
-      nvmath::vec4f point = matrix * box[i];
+      glm::vec4 point = matrix * box[i];
       bbox.merge({point.x, point.y, point.z});
     }
 
@@ -163,7 +163,7 @@ struct MeshInstance
 
   MeshBBox bbox;
 
-  nvmath::mat4f xform;
+  glm::mat4 xform;
 };
 
 // MeshSet aggregates a number of meshes instanced from a set
@@ -217,7 +217,7 @@ struct MeshSet
   void setupDirectionBoundsGlobals(uint32_t numThreads = 0);
   void clearDirectionBoundsGlobals();
 
-  void setupInstanceGrid(size_t numOrig, size_t copies, uint32_t axis, nvmath::vec3f refShift);
+  void setupInstanceGrid(size_t numOrig, size_t copies, uint32_t axis, glm::vec3 refShift);
 
   // setup largestInstance and longestEdge
   void setupLargestInstance();

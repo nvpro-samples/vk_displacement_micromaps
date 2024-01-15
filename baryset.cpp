@@ -238,14 +238,14 @@ void BaryAttributesSet::updateStats()
   }
 }
 
-static float getSignedTriangleVolume(nvmath::vec3f a, nvmath::vec3f b, nvmath::vec3f c)
+static float getSignedTriangleVolume(glm::vec3 a, glm::vec3 b, glm::vec3 c)
 {
   // http://chenlab.ece.cornell.edu/Publication/Cha/icip01_Cha.pdf
   return (1.0f / 6.0f)
          * (-(c.x * b.y * a.z) + (b.x * c.y * a.z) + (c.x * a.y * b.z) - (a.x * c.y * b.z) - (b.x * a.y * c.z) + (a.x * b.y * c.z));
 }
 
-static float getBoundsVolume(nvmath::vec3f min0, nvmath::vec3f min1, nvmath::vec3f min2, nvmath::vec3f max0, nvmath::vec3f max1, nvmath::vec3f max2)
+static float getBoundsVolume(glm::vec3 min0, glm::vec3 min1, glm::vec3 min2, glm::vec3 max0, glm::vec3 max1, glm::vec3 max2)
 {
   // prismoid shape made out of
   // 1 bottom tri, 3 side quads, 1 top tri
@@ -285,9 +285,9 @@ double BaryAttributesSet::computeShellVolume(const MeshSet& meshSet, bool perfer
 
     const bary::Group& baryGroup = baryData->groups[mesh.displacementGroup];
 
-    const nvmath::vec3f* positions  = &meshSet.attributes.positions[mesh.firstVertex];
-    const nvmath::vec3f* directions = &meshSet.attributes.directions[mesh.firstVertex];
-    const nvmath::vec2f* directionsBounds = mesh.directionBoundsAreUniform || meshSet.attributes.directionBounds.empty() ?
+    const glm::vec3* positions  = &meshSet.attributes.positions[mesh.firstVertex];
+    const glm::vec3* directions = &meshSet.attributes.directions[mesh.firstVertex];
+    const glm::vec2* directionsBounds = mesh.directionBoundsAreUniform || meshSet.attributes.directionBounds.empty() ?
                                                 nullptr :
                                                 &meshSet.attributes.directionBounds[mesh.firstVertex];
 
@@ -303,19 +303,19 @@ double BaryAttributesSet::computeShellVolume(const MeshSet& meshSet, bool perfer
           uint32_t idxB = indices[triIdx * 3 + 1];
           uint32_t idxC = indices[triIdx * 3 + 2];
 
-          nvmath::vec3f posA = positions[idxA];
-          nvmath::vec3f posB = positions[idxB];
-          nvmath::vec3f posC = positions[idxC];
+          glm::vec3 posA = positions[idxA];
+          glm::vec3 posB = positions[idxB];
+          glm::vec3 posC = positions[idxC];
 
-          nvmath::vec3f dirA = directions[idxA];
-          nvmath::vec3f dirB = directions[idxB];
-          nvmath::vec3f dirC = directions[idxC];
+          glm::vec3 dirA = directions[idxA];
+          glm::vec3 dirB = directions[idxB];
+          glm::vec3 dirC = directions[idxC];
 
           if(directionsBounds)
           {
-            nvmath::vec2f boundsA = directionsBounds[idxA];
-            nvmath::vec2f boundsB = directionsBounds[idxB];
-            nvmath::vec2f boundsC = directionsBounds[idxC];
+            glm::vec2 boundsA = directionsBounds[idxA];
+            glm::vec2 boundsB = directionsBounds[idxB];
+            glm::vec2 boundsC = directionsBounds[idxC];
 
             posA = posA + dirA * boundsA.x;
             posB = posB + dirB * boundsB.x;
@@ -361,9 +361,9 @@ void BaryAttributesSet::fillUniformDirectionBounds(MeshSet& meshSet) const
 
     const bary::Group& baryGroup = baryData->groups[mesh.displacementGroup];
 
-    nvmath::vec2f* bounds = meshSet.attributes.directionBounds.data() + mesh.firstVertex;
+    glm::vec2* bounds = meshSet.attributes.directionBounds.data() + mesh.firstVertex;
 
-    nvmath::vec2f biasScale = {baryGroup.floatBias.r, baryGroup.floatScale.r};
+    glm::vec2 biasScale = {baryGroup.floatBias.r, baryGroup.floatScale.r};
     std::fill(bounds, bounds + mesh.numVertices, biasScale);
   }
 }

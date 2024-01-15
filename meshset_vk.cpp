@@ -18,7 +18,7 @@
  */
 #include "resources_vk.hpp"
 
-#include <nvmath/nvmath.h>
+#include <glm/glm.hpp>
 #include <nvvk/structs_vk.hpp>
 #include <nvvk/images_vk.hpp>
 #include <stb_image.h>
@@ -32,7 +32,7 @@
 #include "vk_nv_micromesh.h"
 
 namespace microdisp {
-static void convertToOct(uint32_t* dst, const std::vector<nvmath::vec3f>& vecs)
+static void convertToOct(uint32_t* dst, const std::vector<glm::vec3>& vecs)
 {
   const auto src = vecs.data();
 
@@ -90,7 +90,7 @@ void MeshAttributesVK::init(ResourcesVK& res, const MeshSet& meshSet)
   }
   if(meshSet.attributes.texcoords0.size() > 0)
   {
-    tex0s = res.createBuffer(sizeof(nvmath::vec2f) * meshSet.attributes.texcoords0.size(),
+    tex0s = res.createBuffer(sizeof(glm::vec2) * meshSet.attributes.texcoords0.size(),
                              VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
     checkAllocSuccess(res, tex0s.buffer);
   }
@@ -119,7 +119,7 @@ void MeshAttributesVK::deinit(ResourcesVK& res)
 
 void MeshSetVK::init(ResourcesVK& res, const MeshSet& meshSet)
 {
-  positions = res.createBuffer(sizeof(nvmath::vec3f) * meshSet.attributes.positions.size(),
+  positions = res.createBuffer(sizeof(glm::vec3) * meshSet.attributes.positions.size(),
                                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
                                    | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR);
   checkAllocSuccess(res, positions.buffer);
@@ -203,8 +203,8 @@ void MeshSetVK::initDisplacementDirections(ResourcesVK& res, const MeshSet& mesh
 
       for(size_t i = 0; i < meshSet.attributes.directions.size(); i++)
       {
-        nvmath::vec3f nrm = meshSet.attributes.directions[i];
-        dirs[i]           = {float16_t(nrm.x), float16_t(nrm.y), float16_t(nrm.z), 0};
+        glm::vec3 nrm = meshSet.attributes.directions[i];
+        dirs[i]       = {float16_t(nrm.x), float16_t(nrm.y), float16_t(nrm.z), 0};
       }
 
       res.tempSyncSubmit(cmd);
@@ -229,7 +229,7 @@ void MeshSetVK::initDisplacementBounds(ResourcesVK& res, const MeshSet& meshSet)
     res.tempResetResources();
     {
       VkCommandBuffer cmd = res.createTempCmdBuffer();
-      f16vec2*        bounds =
+      f16vec2* bounds =
           staging->cmdToBufferT<f16vec2>(cmd, displacementDirectionBounds.buffer, 0, displacementDirectionBounds.info.range);
 
       for(size_t i = 0; i < meshSet.attributes.directionBounds.size(); i++)
@@ -337,7 +337,7 @@ void MeshSetVK::updateInstances(ResourcesVK& res, const MeshSet& meshSet)
 
       if(mesh.materialID != MeshSetID::INVALID && mesh.materialID < meshSet.materials.size())
       {
-        insts->color       = nvmath::vec4f(meshSet.materials[mesh.materialID].diffuse, 1.0f);
+        insts->color       = glm::vec4(meshSet.materials[mesh.materialID].diffuse, 1.0f);
         insts->normalMapID = meshSet.materials[mesh.materialID].normalMapTextureID;
       }
       else
@@ -347,15 +347,15 @@ void MeshSetVK::updateInstances(ResourcesVK& res, const MeshSet& meshSet)
       }
       // meshSet.transformNodes[it.nodeId == tools::common::INVALID_ID ? 0 : it.nodeId].ctm
       insts->worldMatrix  = it.xform;
-      insts->worldMatrixI = nvmath::invert(it.xform);
+      insts->worldMatrixI = glm::inverse(it.xform);
       insts->firstIndex   = mesh.firstIndex;
       insts->firstVertex  = mesh.firstVertex;
-      insts->bboxMin      = nvmath::vec4f(mesh.bbox.mins, 0.0f);
-      insts->bboxMax      = nvmath::vec4f(mesh.bbox.maxs, 0.0f);
+      insts->bboxMin      = glm::vec4(mesh.bbox.mins, 0.0f);
+      insts->bboxMax      = glm::vec4(mesh.bbox.maxs, 0.0f);
       insts->lodSphere    = (insts->bboxMax + insts->bboxMin) * 0.5f;
       insts->lodSphere.w  = mesh.longestEdge * 0.5f;
       insts->lodSubdiv    = mesh.displacementMaxSubdiv;
-      insts->lodRange     = nvmath::length(nvmath::vec3(insts->bboxMax - insts->bboxMin)) * 0.5f;
+      insts->lodRange     = glm::length(glm::vec3(insts->bboxMax - insts->bboxMin)) * 0.5f;
       insts++;
     }
 
@@ -440,7 +440,7 @@ void MeshSetVK::initRayTracingGeometry(ResourcesVK& res, const MeshSet& meshSet,
 
     meshRT.geometry.geometry.triangles.vertexData = getBufferAddress<VkDeviceOrHostAddressConstKHR>(device, positions.buffer);
 
-    meshRT.geometry.geometry.triangles.vertexStride = sizeof(nvmath::vec3f);
+    meshRT.geometry.geometry.triangles.vertexStride = sizeof(glm::vec3);
     meshRT.geometry.geometry.triangles.vertexFormat = VK_FORMAT_R32G32B32_SFLOAT;
     meshRT.geometry.geometry.triangles.maxVertex    = vertexCount;
 
@@ -681,20 +681,20 @@ void MeshSetVK::initRayTracingScene(ResourcesVK& res, const MeshSet& meshSet, co
       const MeshInfo&                     mesh     = meshSet.meshInfos[minst.meshID];
       MeshRT&                             meshRT   = rtMeshes[minst.meshID];
 
-      instance.transform.matrix[0][0] = minst.xform.a00;
-      instance.transform.matrix[0][1] = minst.xform.a01;
-      instance.transform.matrix[0][2] = minst.xform.a02;
-      instance.transform.matrix[0][3] = minst.xform.a03;
+      instance.transform.matrix[0][0] = minst.xform[0][0];
+      instance.transform.matrix[0][1] = minst.xform[0][1];
+      instance.transform.matrix[0][2] = minst.xform[0][2];
+      instance.transform.matrix[0][3] = minst.xform[0][3];
 
-      instance.transform.matrix[1][0] = minst.xform.a10;
-      instance.transform.matrix[1][1] = minst.xform.a11;
-      instance.transform.matrix[1][2] = minst.xform.a12;
-      instance.transform.matrix[1][3] = minst.xform.a13;
+      instance.transform.matrix[1][0] = minst.xform[1][0];
+      instance.transform.matrix[1][1] = minst.xform[1][1];
+      instance.transform.matrix[1][2] = minst.xform[1][2];
+      instance.transform.matrix[1][3] = minst.xform[1][3];
 
-      instance.transform.matrix[2][0] = minst.xform.a20;
-      instance.transform.matrix[2][1] = minst.xform.a21;
-      instance.transform.matrix[2][2] = minst.xform.a22;
-      instance.transform.matrix[2][3] = minst.xform.a23;
+      instance.transform.matrix[2][0] = minst.xform[2][0];
+      instance.transform.matrix[2][1] = minst.xform[2][1];
+      instance.transform.matrix[2][2] = minst.xform[2][2];
+      instance.transform.matrix[2][3] = minst.xform[2][3];
 
       instance.flags               = 0;
       instance.mask                = 0xFF;

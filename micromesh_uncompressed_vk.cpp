@@ -35,16 +35,16 @@ namespace {
 // minDisp and maxDisp are the minimum and maximum displacement over the triangle,
 // before application of direction bounds.
 // Returns (center, radius).
-inline nvmath::vec4f computeSphere(const MeshSet& meshSet, uint64_t meshGlobalTriIdx, float minDisp, float maxDisp, bool directionBoundsAreUniform)
+inline glm::vec4 computeSphere(const MeshSet& meshSet, uint64_t meshGlobalTriIdx, float minDisp, float maxDisp, bool directionBoundsAreUniform)
 {
-  const nvmath::vec3ui* triIndices = reinterpret_cast<const nvmath::vec3ui*>(meshSet.globalIndices.data());
+  const glm::uvec3* triIndices = reinterpret_cast<const glm::uvec3*>(meshSet.globalIndices.data());
 
-  nvmath::vec4f sphere;
+  glm::vec4 sphere;
 
-  nvmath::vec3ui indices = triIndices[meshGlobalTriIdx];
-  nvmath::vec3f  verts[3];
-  nvmath::vec3f  dirs[3];
-  nvmath::vec2f  bounds[3];
+  glm::uvec3 indices = triIndices[meshGlobalTriIdx];
+  glm::vec3  verts[3];
+  glm::vec3  dirs[3];
+  glm::vec2  bounds[3];
 
   verts[0] = meshSet.attributes.positions[indices.x];
   verts[1] = meshSet.attributes.positions[indices.y];
@@ -68,7 +68,7 @@ inline nvmath::vec4f computeSphere(const MeshSet& meshSet, uint64_t meshGlobalTr
     dirs[2] = dirs[2] * bounds[2].y;
   }
 
-  nvmath::vec3f vertExtents[6];
+  glm::vec3 vertExtents[6];
   vertExtents[0] = verts[0] + dirs[0] * minDisp;
   vertExtents[1] = verts[1] + dirs[1] * minDisp;
   vertExtents[2] = verts[2] + dirs[2] * minDisp;
@@ -76,7 +76,7 @@ inline nvmath::vec4f computeSphere(const MeshSet& meshSet, uint64_t meshGlobalTr
   vertExtents[4] = verts[1] + dirs[1] * maxDisp;
   vertExtents[5] = verts[2] + dirs[2] * maxDisp;
 
-  nvmath::vec3f center = vertExtents[0];
+  glm::vec3 center = vertExtents[0];
   center += vertExtents[1];
   center += vertExtents[2];
   center += vertExtents[3];
@@ -87,7 +87,7 @@ inline nvmath::vec4f computeSphere(const MeshSet& meshSet, uint64_t meshGlobalTr
   float radius = 0;
   for(uint32_t i = 0; i < 6; i++)
   {
-    radius = std::max(radius, nvmath::length(vertExtents[i] - center));
+    radius = std::max(radius, glm::length(vertExtents[i] - center));
   }
 
   sphere.x = center.x;
@@ -196,7 +196,7 @@ void MicromeshSetUncompressedVK::init(ResourcesVK& res, const MeshSet& meshSet, 
       meshData.distances = res.createBuffer(basic.valuesInfo->valueByteSize * group.valueCount + sizeof(uint32_t),
                                             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
       meshData.baseTriangleSpheres =
-          res.createBuffer(sizeof(nvmath::vec4f) * mesh.numPrimitives, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+          res.createBuffer(sizeof(glm::vec4) * mesh.numPrimitives, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
       meshData.baseTrianglesMinMax = res.createBuffer(basic.triangleMinMaxsInfo->elementByteSize * 2 * mesh.numPrimitives,
                                                       VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 
@@ -281,8 +281,8 @@ void MicromeshSetUncompressedVK::uploadFlatTriangles(ResourcesVK&             re
   MicromeshUncBaseTri* baseTriData = res.m_allocator.getStaging()->cmdToBufferT<MicromeshUncBaseTri>(
       cmd, meshData.baseTriangles.buffer, meshData.baseTriangles.info.offset, meshData.baseTriangles.info.range);
 
-  nvmath::vec4f* sphereData =
-      res.m_allocator.getStaging()->cmdToBufferT<nvmath::vec4f>(cmd, meshData.baseTriangleSpheres.buffer,
+  glm::vec4* sphereData =
+      res.m_allocator.getStaging()->cmdToBufferT<glm::vec4>(cmd, meshData.baseTriangleSpheres.buffer,
                                                                 meshData.baseTriangleSpheres.info.offset,
                                                                 meshData.baseTriangleSpheres.info.range);
 
@@ -325,7 +325,7 @@ void MicromeshSetUncompressedVK::uploadFlatTriangles(ResourcesVK&             re
           flat.meshletCount = uint32_t(baryMap.getLevel(flat.subdivLevel, flat.topoBits, MAX_BARYMAP_LEVELS).headersCount);
 
           // Compute the bounding sphere
-          nvmath::vec4f& sphere = sphereData[meshLocalTriIdx];
+          glm::vec4& sphere = sphereData[meshLocalTriIdx];
 
           const float valueBias  = baryGroup.floatBias.r;
           const float valueScale = baryGroup.floatScale.r;

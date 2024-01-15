@@ -977,7 +977,7 @@ void ResourcesVK::cmdBeginRenderPass(VkCommandBuffer cmd, bool clear, bool hasSe
   renderPassBeginInfo.renderArea.extent.height = m_framebuffer.renderHeight;
   renderPassBeginInfo.clearValueCount          = 2;
 
-  nvmath::vec4f bgColor(0.1, 0.13, 0.15, 0);
+  glm::vec4 bgColor(0.1, 0.13, 0.15, 0);
 
   VkClearValue clearValues[2];
   clearValues[0].color.float32[0]     = bgColor.x;

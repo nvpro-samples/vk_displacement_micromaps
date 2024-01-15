@@ -21,19 +21,19 @@
 #define _OCTANT_ENCODING_H_
 
 #ifdef __cplusplus
-namespace nvmath {
+namespace glm {
     #define OCT_INLINE inline
-    #define OCT_FLOOR nv_floor
-    #define OCT_CLAMP nv_clamp
-    #define OCT_ABS   nv_abs
+    #define OCT_FLOOR floor
+    #define OCT_CLAMP clamp
+    #define OCT_ABS   abs
     OCT_INLINE uint32_t pack_oct32(vec2 v)
     {
         union {
           int16_t  snorm[2];
           uint32_t packed;
         };
-        snorm[0] = static_cast<int16_t>(nv_clamp(int32_t(std::round(v.x * float(0x7FFF))), -0x7FFF, 0x7FFF));
-        snorm[1] = static_cast<int16_t>(nv_clamp(int32_t(std::round(v.y * float(0x7FFF))), -0x7FFF, 0x7FFF));
+        snorm[0] = static_cast<int16_t>(clamp(int32_t(std::round(v.x * float(0x7FFF))), -0x7FFF, 0x7FFF));
+        snorm[1] = static_cast<int16_t>(clamp(int32_t(std::round(v.y * float(0x7FFF))), -0x7FFF, 0x7FFF));
         return packed;
     }
     OCT_INLINE vec2 unpack_oct32(uint32_t v)

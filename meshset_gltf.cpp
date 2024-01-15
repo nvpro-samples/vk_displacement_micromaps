@@ -29,6 +29,7 @@
 #include <nvh/filemapping.hpp>
 #include <unordered_map>
 #include "dlib_url.h"
+#include "glm/gtc/type_ptr.hpp"
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -282,10 +283,10 @@ static const uint8_t* cgltfBufferView_getData(const cgltf_buffer_view* view)
   return result;
 }
 
-// Creates an nvmath::vec3f from the first three elements of a float array.
-nvmath::vec3f floatArrayToVec3f(const float* arr)
+// Creates an glm::vec3 from the first three elements of a float array.
+glm::vec3 floatArrayToVec3f(const float* arr)
 {
-  return nvmath::vec3f(arr[0], arr[1], arr[2]);
+  return glm::vec3(arr[0], arr[1], arr[2]);
 }
 
 // Traverses the glTF node and any of its children, adding a MeshInstance to
@@ -293,18 +294,18 @@ nvmath::vec3f floatArrayToVec3f(const float* arr)
 void addMeshInstancesFromNode(MeshSet&            meshSet,
                               const cgltf_node*   node,
                               cgltfPrimToIdMap&   gltfPrimToMeshMap,
-                              const nvmath::mat4f parentObjToWorldTransform = nvmath::mat4f_id)
+                              const glm::mat4 parentObjToWorldTransform = glm::mat4(1))
 {
   if(node == nullptr)
     return;
 
   // Compute this node's object-to-world transform.
   // See https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_004_ScenesNodes.md .
-  // Note that this depends on nvmath::mat4f being column-major.
+  // Note that this depends on glm::mat4 being column-major.
   // The documentation above also means that vectors are multiplied on the right.
-  nvmath::mat4f localNodeTransform(1);
-  cgltf_node_transform_local(node, localNodeTransform.mat_array);
-  const nvmath::mat4f nodeObjToWorldTransform = parentObjToWorldTransform * localNodeTransform;
+  glm::mat4 localNodeTransform(1);
+  cgltf_node_transform_local(node, glm::value_ptr(localNodeTransform));
+  const glm::mat4 nodeObjToWorldTransform = parentObjToWorldTransform * localNodeTransform;
 
   // If this node has a mesh, add instances for its primitives.
   if(node->mesh != nullptr)
@@ -467,7 +468,7 @@ bool loadGLTF(MeshSet& meshSet, BaryAttributesSet* barySet, const char* filename
       material.name = std::string(gltfMaterial.name);
     }
 
-    material.diffuse = nvmath::vec3f(1.0f, 1.0f, 1.0f);
+    material.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
     if(gltfMaterial.has_pbr_metallic_roughness)
     {
       material.diffuse = floatArrayToVec3f(gltfMaterial.pbr_metallic_roughness.base_color_factor);
@@ -610,11 +611,11 @@ bool loadGLTF(MeshSet& meshSet, BaryAttributesSet* barySet, const char* filename
           vtxAttribs.bitangents.resize(newNumVertices);
           for(size_t i = 0; i < primNumVertices; i++)
           {
-            nvmath::vec4f gltfTangent;
+            glm::vec4 gltfTangent;
             cgltf_accessor_read_float(accessor, i, &gltfTangent.x, 4);
-            vtxAttribs.tangents[beforeNumVertices + i] = nvmath::vec3f(gltfTangent.x, gltfTangent.y, gltfTangent.z);
+            vtxAttribs.tangents[beforeNumVertices + i] = glm::vec3(gltfTangent.x, gltfTangent.y, gltfTangent.z);
             // store handedness for now, then later compute bitangents
-            vtxAttribs.bitangents[beforeNumVertices + i] = nvmath::vec3f(gltfTangent.w < 0.0f ? -1.0f : 1.0f);
+            vtxAttribs.bitangents[beforeNumVertices + i] = glm::vec3(gltfTangent.w < 0.0f ? -1.0f : 1.0f);
           }
         }
         else if(strcmp(gltfAttrib.name, "TEXCOORD_0") == 0 || strcmp(gltfAttrib.name, "TEXCOORD") == 0)
@@ -640,7 +641,7 @@ bool loadGLTF(MeshSet& meshSet, BaryAttributesSet* barySet, const char* filename
         {
           // bitangents store handedness at this point
           vtxAttribs.bitangents[beforeNumVertices + i] =
-              nvmath::normalize(nvmath::cross(vtxAttribs.normals[beforeNumVertices + i], vtxAttribs.tangents[beforeNumVertices + i]))
+              glm::normalize(glm::cross(vtxAttribs.normals[beforeNumVertices + i], vtxAttribs.tangents[beforeNumVertices + i]))
               * vtxAttribs.bitangents[beforeNumVertices + i].x;
         }
       }
@@ -722,7 +723,7 @@ bool loadGLTF(MeshSet& meshSet, BaryAttributesSet* barySet, const char* filename
 
           for(size_t i = 0; i < primNumVertices; i++)
           {
-            nvmath::vec4f temp;
+            glm::vec4 temp;
             cgltf_accessor_read_float(directions, i, &temp.x, components);
             vtxAttribs.directions[beforeNumVertices + i] = {temp.x, temp.y, temp.z};
           }
@@ -924,12 +925,12 @@ bool loadGLTF(MeshSet& meshSet, BaryAttributesSet* barySet, const char* filename
           }
 
           uint64_t             arrayCount = bfile.m_content.mesh.meshDisplacementDirectionBoundsInfo->elementCount;
-          const nvmath::vec2f* arrayData =
-              reinterpret_cast<const nvmath::vec2f*>(bfile.m_content.mesh.meshDisplacementDirectionBounds);
+          const glm::vec2* arrayData =
+              reinterpret_cast<const glm::vec2*>(bfile.m_content.mesh.meshDisplacementDirectionBounds);
           assert((gltfDispPrim.direction_bounds_offset + mesh.numVertices) <= arrayCount);
 
           memcpy(&vtxAttribs.directionBounds[mesh.firstVertex], arrayData + gltfDispPrim.direction_bounds_offset,
-                 sizeof(nvmath::vec2f) * mesh.numVertices);
+                 sizeof(glm::vec2) * mesh.numVertices);
 
           mesh.directionBoundsAreUniform    = false;
           meshSet.directionBoundsAreUniform = false;
@@ -944,11 +945,11 @@ bool loadGLTF(MeshSet& meshSet, BaryAttributesSet* barySet, const char* filename
           }
 
           uint64_t             arrayCount = bfile.m_content.mesh.meshDisplacementDirectionsInfo->elementCount;
-          const nvmath::vec3f* arrayData = reinterpret_cast<const nvmath::vec3f*>(bfile.m_content.mesh.meshDisplacementDirections);
+          const glm::vec3* arrayData = reinterpret_cast<const glm::vec3*>(bfile.m_content.mesh.meshDisplacementDirections);
           assert((gltfDispPrim.directions_offset + mesh.numVertices) <= arrayCount);
 
           memcpy(&vtxAttribs.directions[mesh.firstVertex], arrayData + gltfDispPrim.directions_offset,
-                 sizeof(nvmath::vec3f) * mesh.numVertices);
+                 sizeof(glm::vec3) * mesh.numVertices);
 
           mesh.directionsUseMeshNormals    = false;
           meshSet.directionsUseMeshNormals = false;

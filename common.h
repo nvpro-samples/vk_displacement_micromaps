@@ -256,7 +256,7 @@ layout(buffer_reference, buffer_reference_align = 4, scalar) restrict buffer uin
 
 #ifdef __cplusplus
 namespace microdisp {
-using namespace nvmath;
+using namespace glm;
 #endif
 
 struct SceneData

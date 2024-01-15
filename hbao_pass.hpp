@@ -28,7 +28,7 @@
 #include <nvh/trangeallocator.hpp>
 
 #include <assert.h>
-#include <nvmath/nvmath.h>
+#include <glm/glm.hpp>
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +94,7 @@ public:
     float         nearPlane;
     float         farPlane;
     float         halfFovyTan;
-    nvmath::mat4f projectionMatrix;
+    glm::mat4 projectionMatrix;
   };
 
   struct Settings
@@ -145,7 +145,7 @@ private:
   Shaders   m_shaders;
   Pipelines m_pipelines;
 
-  nvmath::vec4f m_hbaoRandom[RANDOM_ELEMENTS];
+  glm::vec4 m_hbaoRandom[RANDOM_ELEMENTS];
 
   void updatePipelines();
   void updateUbo(VkCommandBuffer cmd, const Frame& frame, const Settings& settings) const;

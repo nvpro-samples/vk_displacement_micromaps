@@ -53,10 +53,10 @@ void SceneVK::updateGrid(ResourcesVK& res, uint32_t copies, uint32_t axis, float
   copies = std::max(copies, 1u);
 
   // Handle the case where only meshLo exists (e.g. when viewing a file with displacement):
-  nvmath::vec3f diagonal = meshSetLo->bbox.diagonal() * spacing;
+  glm::vec3 diagonal = meshSetLo->bbox.diagonal() * spacing;
   if(spacing < 0)
   {
-    diagonal = -spacing;
+    diagonal = glm::vec3(-spacing);
   }
 
   meshSetLo->setupInstanceGrid(meshSetLoOrigInstanceCount, copies, axis, diagonal);

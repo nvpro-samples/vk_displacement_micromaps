@@ -70,7 +70,7 @@ void MicromeshSetCompressedVK::initBasics(ResourcesVK& res, const MeshSet& meshS
       uint32_t baseTriangleCount = mesh.numPrimitives;
 
       meshData.baseTriangles = res.createBuffer(sizeof(MicromeshBaseTri) * baseTriangleCount, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-      meshData.baseSpheres = res.createBuffer(sizeof(nvmath::vec4f) * baseTriangleCount, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+      meshData.baseSpheres = res.createBuffer(sizeof(glm::vec4) * baseTriangleCount, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
       meshData.microTriangleCount = baseTriangleCount;
     }
     else

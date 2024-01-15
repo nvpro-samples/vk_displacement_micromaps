@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <platform.h>
-#include <nvmath/nvmath_glsltypes.h>
 #include <nvh/nvprint.hpp>
 #include <nvvk/buffers_vk.hpp>
 #include <nvvk/commands_vk.hpp>

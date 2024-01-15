@@ -258,4 +258,3 @@ You can find shaderc prebuilt binaries [here](https://github.com/google/shaderc/
 # Third Party Licenses
 
 * [`dlib_url.h`](PACKAGE-LICENSES/dlib-LICENSE.md)
-* [`half.hpp`](PACKAGE-LICENSES/half-LICENSE.md)

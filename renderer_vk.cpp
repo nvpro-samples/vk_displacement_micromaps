@@ -21,9 +21,7 @@
 #include <algorithm>
 #include <assert.h>
 
-#include <nvmath/nvmath_glsltypes.h>
-
-using namespace nvmath;
+using namespace glm;
 #include "common.h"
 #include "common_mesh.h"
 

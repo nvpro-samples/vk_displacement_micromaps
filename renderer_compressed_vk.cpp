@@ -22,7 +22,6 @@
 #include <assert.h>
 #include <nvh/misc.hpp>
 #include <nvh/alignment.hpp>
-#include <nvmath/nvmath_glsltypes.h>
 
 #include "micromesh_compressed_rt_vk.hpp"
 #include "micromesh_decoder_basetri_vk.hpp"
@@ -221,7 +220,7 @@ private:
     VkCommandBuffer cmd   = m_res.createCmdBuffer(m_cmdPool, false, false, true, isCompute);
     nvvk::DebugUtil(m_res.m_device).setObjectName(cmd, "renderer_di");
 
-    nvmath::vec2f scale_bias = nvmath::vec2f(1, 0);
+    glm::vec2 scale_bias = glm::vec2(1, 0);
 
     if(!isCompute)
     {

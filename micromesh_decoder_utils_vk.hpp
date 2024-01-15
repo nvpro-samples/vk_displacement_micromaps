@@ -93,11 +93,11 @@ inline uint32_t unpackBits(uint32_t value, int offset, int width)
   return (uint32_t)((value >> offset) & ((1 << width) - 1));
 }
 
-nvmath::vec4f computeSphere(const MeshSet& meshSet, size_t baseTriangleIdx, const nvmath::vec3f barys[3], float minDisp, float maxDisp, bool directionBoundsAreUniform);
+glm::vec4 computeSphere(const MeshSet& meshSet, size_t baseTriangleIdx, const glm::vec3 barys[3], float minDisp, float maxDisp, bool directionBoundsAreUniform);
 
-inline nvmath::vec4f computeSphere(const MicromeshBaseTri& micro, const MeshSet& meshSet, size_t baseTriangleIdx, float minDisp, float maxDisp, bool directionBoundsAreUniform)
+inline glm::vec4 computeSphere(const MicromeshBaseTri& micro, const MeshSet& meshSet, size_t baseTriangleIdx, float minDisp, float maxDisp, bool directionBoundsAreUniform)
 {
-  nvmath::vec3f vertBarys[3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+  glm::vec3 vertBarys[3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   return computeSphere(meshSet, baseTriangleIdx, vertBarys, minDisp, maxDisp, directionBoundsAreUniform);
 }
 

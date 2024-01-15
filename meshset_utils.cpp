@@ -20,7 +20,8 @@
 #include "meshset_utils.hpp"
 #include "parallel_work.hpp"
 #include <cassert>
-#include <nvmath/nvmath.h>
+#include <cstring> // memcmp
+#include <glm/glm.hpp>
 #include <unordered_set>
 
 static inline uint32_t murmurHash2A(const void* key, size_t len, uint32_t seed)
@@ -245,7 +246,7 @@ std::vector<uint32_t> buildUniquePositionMap(const MeshSet& meshSet, uint32_t nu
         mesh.numVertices,
         [&](uint64_t idx) {
           uint32_t hash =
-              murmurHash2A(meshSet.attributes.positions.data() + idx + mesh.firstVertex, sizeof(nvmath::vec3f), 127) & hashTableMask;
+              murmurHash2A(meshSet.attributes.positions.data() + idx + mesh.firstVertex, sizeof(glm::vec3), 127) & hashTableMask;
           vertexHashes[idx] = hash;
           vertexHashCounts[hash] += 1;
         },
@@ -276,7 +277,7 @@ std::vector<uint32_t> buildUniquePositionMap(const MeshSet& meshSet, uint32_t nu
           {
             uint32_t iOther = vertexHashIndices[entry.firstVertex + i];
             uint64_t iSelf  = idx + mesh.firstVertex;
-            if(memcmp(meshSet.attributes.positions.data() + iOther, meshSet.attributes.positions.data() + iSelf, sizeof(nvmath::vec3f)) == 0)
+            if(memcmp(meshSet.attributes.positions.data() + iOther, meshSet.attributes.positions.data() + iSelf, sizeof(glm::vec3)) == 0)
             {
               vertexUniquePosMap[iSelf] = iOther;
               break;
@@ -340,8 +341,8 @@ std::vector<uint32_t> buildUniquePositionDirectionMap(const MeshSet& meshSet, ui
         mesh.numVertices,
         [&](uint64_t idx) {
           uint32_t hash =
-              murmurHash2A(meshSet.attributes.directions.data() + idx + mesh.firstVertex, sizeof(nvmath::vec3f),
-                           murmurHash2A(meshSet.attributes.positions.data() + idx + mesh.firstVertex, sizeof(nvmath::vec3f), 127))
+              murmurHash2A(meshSet.attributes.directions.data() + idx + mesh.firstVertex, sizeof(glm::vec3),
+                           murmurHash2A(meshSet.attributes.positions.data() + idx + mesh.firstVertex, sizeof(glm::vec3), 127))
               & hashTableMask;
           vertexHashes[idx] = hash;
           vertexHashCounts[hash] += 1;
@@ -373,9 +374,9 @@ std::vector<uint32_t> buildUniquePositionDirectionMap(const MeshSet& meshSet, ui
           {
             uint32_t iOther = vertexHashIndices[entry.firstVertex + i];
             uint32_t iSelf  = uint32_t(idx) + mesh.firstVertex;
-            if(memcmp(meshSet.attributes.positions.data() + iOther, meshSet.attributes.positions.data() + iSelf, sizeof(nvmath::vec3f)) == 0
+            if(memcmp(meshSet.attributes.positions.data() + iOther, meshSet.attributes.positions.data() + iSelf, sizeof(glm::vec3)) == 0
                && memcmp(meshSet.attributes.directions.data() + iOther, meshSet.attributes.directions.data() + iSelf,
-                         sizeof(nvmath::vec3f))
+                         sizeof(glm::vec3))
                       == 0)
             {
               vertexUniquePosDirMap[iSelf] = iOther;
@@ -402,7 +403,7 @@ std::vector<uint32_t> buildMappedIndices(const std::vector<uint32_t>& vertexMap,
 
 
 
-std::vector<nvmath::vec3f> buildSmoothVertexNormals(const MeshSet& meshSet, float areaWeight /*= 0.0f*/, uint32_t numThreads /*= 0*/)
+std::vector<glm::vec3> buildSmoothVertexNormals(const MeshSet& meshSet, float areaWeight /*= 0.0f*/, uint32_t numThreads /*= 0*/)
 {
   if(meshSet.globalUniquePosIndices.empty() || meshSet.globalUniquePosMap.empty())
   {
@@ -413,25 +414,25 @@ std::vector<nvmath::vec3f> buildSmoothVertexNormals(const MeshSet& meshSet, floa
   size_t numTris     = meshSet.indices.size() / 3;
 
   const uint32_t*       uniques   = meshSet.globalUniquePosMap.data();
-  const nvmath::vec3ui* indices   = reinterpret_cast<const nvmath::vec3ui*>(meshSet.globalUniquePosIndices.data());
-  const nvmath::vec3f*  positions = reinterpret_cast<const nvmath::vec3f*>(meshSet.attributes.positions.data());
+  const glm::uvec3* indices   = reinterpret_cast<const glm::uvec3*>(meshSet.globalUniquePosIndices.data());
+  const glm::vec3*  positions = reinterpret_cast<const glm::vec3*>(meshSet.attributes.positions.data());
 
-  std::vector<nvmath::vec3f> triNormals(numTris);
+  std::vector<glm::vec3> triNormals(numTris);
 
   parallel_batches(
       numTris,
       [&](uint64_t idx) {
-        nvmath::vec3ui triIndices = indices[idx];
+        glm::uvec3 triIndices = indices[idx];
 
-        nvmath::vec3f v0 = positions[triIndices.x];
-        nvmath::vec3f v1 = positions[triIndices.y];
-        nvmath::vec3f v2 = positions[triIndices.z];
+        glm::vec3 v0 = positions[triIndices.x];
+        glm::vec3 v1 = positions[triIndices.y];
+        glm::vec3 v2 = positions[triIndices.z];
 
-        nvmath::vec3f e0 = v1 - v0;
-        nvmath::vec3f e1 = v2 - v0;
+        glm::vec3 e0 = v1 - v0;
+        glm::vec3 e1 = v2 - v0;
 
-        nvmath::vec3f nrm = nvmath::cross(e0, e1);
-        float         len = nvmath::length(nrm);
+        glm::vec3 nrm = glm::cross(e0, e1);
+        float         len = glm::length(nrm);
         len               = (0.5f * areaWeight) + (1.0f - areaWeight) * len;
         nrm               = nrm / len;
 
@@ -440,10 +441,10 @@ std::vector<nvmath::vec3f> buildSmoothVertexNormals(const MeshSet& meshSet, floa
       numThreads);
 
 
-  std::vector<nvmath::vec3f> smoothNormals(numVertices, {0, 0, 0});
+  std::vector<glm::vec3> smoothNormals(numVertices, {0, 0, 0});
   for(size_t i = 0; i < numTris; i++)
   {
-    nvmath::vec3ui triIndices = indices[i];
+    glm::uvec3 triIndices = indices[i];
 
     smoothNormals[triIndices.x] += triNormals[i];
     smoothNormals[triIndices.y] += triNormals[i];
@@ -455,7 +456,7 @@ std::vector<nvmath::vec3f> buildSmoothVertexNormals(const MeshSet& meshSet, floa
     uint32_t map = uniques[i];
     if(map == i)
     {
-      smoothNormals[i] = nvmath::normalize(smoothNormals[i]);
+      smoothNormals[i] = glm::normalize(smoothNormals[i]);
     }
     else
     {

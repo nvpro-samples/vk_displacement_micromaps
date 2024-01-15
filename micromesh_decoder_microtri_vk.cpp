@@ -124,8 +124,8 @@ void MicromeshMicroTriangleDecoderVK::uploadMicroBaseTriangles(nvvk::StagingMemo
       staging->cmdToBufferT<MicromeshBaseTri>(cmd, meshData.baseTriangles.buffer, meshData.baseTriangles.info.offset,
                                               meshData.baseTriangles.info.range);
 
-  nvmath::vec4f* sphereData =
-      staging->cmdToBufferT<nvmath::vec4f>(cmd, meshData.baseSpheres.buffer, meshData.baseSpheres.info.offset,
+  glm::vec4* sphereData =
+      staging->cmdToBufferT<glm::vec4>(cmd, meshData.baseSpheres.buffer, meshData.baseSpheres.info.offset,
                                            meshData.baseSpheres.info.range);
 
   const uint8_t* decimateEdgeFlags = meshSet.decimateEdgeFlags.empty() ? nullptr : meshSet.decimateEdgeFlags.data();
@@ -144,7 +144,7 @@ void MicromeshMicroTriangleDecoderVK::uploadMicroBaseTriangles(nvvk::StagingMemo
         float valueScale = baryGroup.floatScale.r;
 
         MicromeshBaseTri& micro  = micromeshData[meshLocalTriIdx];
-        nvmath::vec4f&    sphere = sphereData[meshLocalTriIdx];
+        glm::vec4&    sphere = sphereData[meshLocalTriIdx];
 
         const int32_t upperValueBound = 0x7FF;
         const int32_t upperCullBound  = MICRO_BASE_CULLDIST_MASK;

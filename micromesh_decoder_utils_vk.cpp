@@ -21,16 +21,16 @@
 
 namespace microdisp {
 
-nvmath::vec4f computeSphere(const MeshSet& meshSet, size_t baseTriangleIdx, const nvmath::vec3f barys[3], float minDisp, float maxDisp, bool directionBoundsAreUniform)
+glm::vec4 computeSphere(const MeshSet& meshSet, size_t baseTriangleIdx, const glm::vec3 barys[3], float minDisp, float maxDisp, bool directionBoundsAreUniform)
 {
-  const nvmath::vec3ui* triIndices = reinterpret_cast<const nvmath::vec3ui*>(meshSet.globalIndices.data());
+  const glm::uvec3* triIndices = reinterpret_cast<const glm::uvec3*>(meshSet.globalIndices.data());
 
-  nvmath::vec4f sphere;
+  glm::vec4 sphere;
 
-  nvmath::vec3ui indices = triIndices[baseTriangleIdx];
-  nvmath::vec3f  verts[3];
-  nvmath::vec3f  dirs[3];
-  nvmath::vec2f  bounds[3];
+  glm::uvec3 indices = triIndices[baseTriangleIdx];
+  glm::vec3  verts[3];
+  glm::vec3  dirs[3];
+  glm::vec2  bounds[3];
 
   verts[0] = meshSet.attributes.positions[indices.x];
   verts[1] = meshSet.attributes.positions[indices.y];
@@ -54,7 +54,7 @@ nvmath::vec4f computeSphere(const MeshSet& meshSet, size_t baseTriangleIdx, cons
     dirs[2] = dirs[2] * bounds[2].y;
   }
 
-  nvmath::vec3f vertExtents[6];
+  glm::vec3 vertExtents[6];
   vertExtents[0] = getInterpolated(verts, barys[0]) + getInterpolated(dirs, barys[0]) * minDisp;
   vertExtents[1] = getInterpolated(verts, barys[1]) + getInterpolated(dirs, barys[1]) * minDisp;
   vertExtents[2] = getInterpolated(verts, barys[2]) + getInterpolated(dirs, barys[2]) * minDisp;
@@ -62,7 +62,7 @@ nvmath::vec4f computeSphere(const MeshSet& meshSet, size_t baseTriangleIdx, cons
   vertExtents[4] = getInterpolated(verts, barys[1]) + getInterpolated(dirs, barys[1]) * maxDisp;
   vertExtents[5] = getInterpolated(verts, barys[2]) + getInterpolated(dirs, barys[2]) * maxDisp;
 
-  nvmath::vec3f center = vertExtents[0];
+  glm::vec3 center = vertExtents[0];
   center += vertExtents[1];
   center += vertExtents[2];
   center += vertExtents[3];
@@ -73,7 +73,7 @@ nvmath::vec4f computeSphere(const MeshSet& meshSet, size_t baseTriangleIdx, cons
   float radius = 0;
   for(uint32_t i = 0; i < 6; i++)
   {
-    radius = std::max(radius, nvmath::length(vertExtents[i] - center));
+    radius = std::max(radius, glm::length(vertExtents[i] - center));
   }
 
   sphere.x = center.x;
@@ -122,7 +122,7 @@ void initBmapIndices(RBuffer&                    tableBuffer,
     uint32_t                               msize    = (1 << lvl) + 1;
     for(size_t i = 0; i < level.coordinates.size(); i++)
     {
-      uint32_t idx  = umajorUV_toLinear(msize, nvmath::vec2i(level.coordinates[i].u, level.coordinates[i].v));
+      uint32_t idx  = umajorUV_toLinear(msize, glm::ivec2(level.coordinates[i].u, level.coordinates[i].v));
       bindices[idx] = uint32_t(i);
     }
   }
@@ -228,8 +228,8 @@ void MicroSplitParts::initMergeIndices()
 
 void MicroSplitParts::uploadTriangleIndices(nvvk::StagingMemoryManager* staging, VkCommandBuffer cmd, const RBuffer& triangleIndices, bool doPartFlip)
 {
-  u8vec4* trianglesAll =
-      staging->cmdToBufferT<u8vec4>(cmd, triangleIndices.buffer, triangleIndices.info.offset, triangleIndices.info.range);
+  glm::u8vec4* trianglesAll =
+      staging->cmdToBufferT<glm::u8vec4>(cmd, triangleIndices.buffer, triangleIndices.info.offset, triangleIndices.info.range);
 
   // iterate over all edge decimate permutations
   for(uint32_t decimateEdgeBits = 0; decimateEdgeBits < MICRO_MESHLET_TOPOS; decimateEdgeBits++)
@@ -244,7 +244,7 @@ void MicroSplitParts::uploadTriangleIndices(nvvk::StagingMemoryManager* staging,
       std::vector<baryutils::BaryLevelsMap::Triangle> birdTriangles =
           birdLevel.buildTrianglesWithCollapsedEdges(decimateEdgeBits, true);
 
-      u8vec4* trianglesLevel = trianglesAll + (lvl * MICRO_MESHLET_LOD_PRIMS) + MICRO_MESHLET_PRIMS * decimateEdgeBits;
+      glm::u8vec4* trianglesLevel = trianglesAll + (lvl * MICRO_MESHLET_LOD_PRIMS) + MICRO_MESHLET_PRIMS * decimateEdgeBits;
 
       for(size_t t = 0; t < birdTriangles.size(); t++)
       {
@@ -280,7 +280,7 @@ void MicroSplitParts::uploadTriangleIndices(nvvk::StagingMemoryManager* staging,
       {
         const bary::BlockTriangle* partSplit = &triLevelNtoN[lvl][3][partID];
 
-        u8vec4* trianglesLevel = trianglesAll + (3 * MICRO_MESHLET_LOD_PRIMS) + (subOffset * MICRO_PART_MAX_PRIMITIVES)
+        glm::u8vec4* trianglesLevel = trianglesAll + (3 * MICRO_MESHLET_LOD_PRIMS) + (subOffset * MICRO_PART_MAX_PRIMITIVES)
                                  + MICRO_MESHLET_PRIMS * decimateEdgeBits;
 
         if(decimateEdgeBits == 0)

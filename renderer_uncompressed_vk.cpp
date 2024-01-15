@@ -22,7 +22,6 @@
 #include <assert.h>
 #include <nvh/misc.hpp>
 #include <nvh/alignment.hpp>
-#include <nvmath/nvmath_glsltypes.h>
 
 #include "micromesh_uncompressed_vk.hpp"
 
@@ -181,7 +180,7 @@ private:
     push.firstTriangle = (mesh.firstPrimitive);
     push.triangleMax   = (mesh.numPrimitives) - 1;
     push.instanceID    = uint32_t(instanceIdx);
-    push.scale_bias    = nvmath::vec2f(baryGroup.floatScale.r, baryGroup.floatBias.r);
+    push.scale_bias    = glm::vec2(baryGroup.floatScale.r, baryGroup.floatBias.r);
     push.binding       = meshData.binding.addr;
     return push;
   }
@@ -221,7 +220,7 @@ private:
     VkCommandBuffer cmd   = m_res.createCmdBuffer(m_cmdPool, false, false, true, isCompute);
     nvvk::DebugUtil(m_res.m_device).setObjectName(cmd, "renderer_di");
 
-    nvmath::vec2f scale_bias = nvmath::vec2f(1, 0);
+    glm::vec2 scale_bias = glm::vec2(1, 0);
 
     if(!isCompute)
     {

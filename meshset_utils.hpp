@@ -62,37 +62,40 @@ std::vector<uint32_t> buildMappedIndices(const std::vector<uint32_t>& vertexMap,
 // areaWeight allows to influence the vertex normalization by triangle area
 // otherwise we normalize over affected triangles
 // returns empty if prerequisites not met (vtxUniqueMap and glocalUniqueIndices must exist)
-std::vector<nvmath::vec3f> buildSmoothVertexNormals(const MeshSet& meshSet, float areaWeight = 0.0f, uint32_t numThreads = 0);
-
+std::vector<glm::vec3> buildSmoothVertexNormals(const MeshSet& meshSet, float areaWeight = 0.0f, uint32_t numThreads = 0);
 
 
 template <typename T>
-inline nvmath::vector2<T> getInterpolated(const std::vector<nvmath::vector2<T>>& attributes, nvmath::vec3f coord, nvmath::vec3ui indices)
+inline glm::vec<2, T, glm::qualifier::defaultp> getInterpolated(const std::vector<glm::vec<2, T, glm::qualifier::defaultp>>& attributes,
+                                                                glm::vec3  coord,
+                                                                glm::uvec3 indices)
 {
   return attributes[indices.x] * coord.x + attributes[indices.y] * coord.y + attributes[indices.z] * coord.z;
 }
 
 template <typename T>
-inline T getInterpolated(const std::vector<T>& attributes, nvmath::vec3f coord, nvmath::vec3ui indices)
+inline T getInterpolated(const std::vector<T>& attributes, glm::vec3 coord, glm::uvec3 indices)
 {
   return attributes[indices.x] * coord.x + attributes[indices.y] * coord.y + attributes[indices.z] * coord.z;
 }
 
 template <typename T>
-inline T getInterpolated(const T* attributes, nvmath::vec3f coord, nvmath::vec3ui indices)
+inline T getInterpolated(const T* attributes, glm::vec3 coord, glm::uvec3 indices)
 {
   return attributes[indices.x] * coord.x + attributes[indices.y] * coord.y + attributes[indices.z] * coord.z;
 }
 
 template <typename T>
-inline T getInterpolated(const T* attributes, nvmath::vec3f coord)
+inline T getInterpolated(const T* attributes, glm::vec3 coord)
 {
   return attributes[0] * coord.x + attributes[1] * coord.y + attributes[2] * coord.z;
 }
 
 // Add 3 values by first sorting them from smallest to largest, so the result is order-independent
 template <typename T>
-inline nvmath::vector3<T> add3Sorted(nvmath::vector3<T> a, nvmath::vector3<T> b, nvmath::vector3<T> c)
+inline glm::vec<3, T, glm::qualifier::defaultp> add3Sorted(glm::vec<3, T, glm::qualifier::defaultp> a,
+                                                           glm::vec<3, T, glm::qualifier::defaultp> b,
+                                                           glm::vec<3, T, glm::qualifier::defaultp> c)
 {
   T aL = a[0] + a[1] + a[2];
   T bL = b[0] + b[1] + b[2];
@@ -109,7 +112,9 @@ inline nvmath::vector3<T> add3Sorted(nvmath::vector3<T> a, nvmath::vector3<T> b,
 }
 
 template <typename T>
-inline nvmath::vector2<T> add3Sorted(nvmath::vector2<T> a, nvmath::vector2<T> b, nvmath::vector2<T> c)
+inline glm::vec<2, T, glm::qualifier::defaultp> add3Sorted(glm::vec<2, T, glm::qualifier::defaultp> a,
+                                                           glm::vec<2, T, glm::qualifier::defaultp> b,
+                                                           glm::vec<2, T, glm::qualifier::defaultp> c)
 {
   T aL = a[0] + a[1];
   T bL = b[0] + b[1];
@@ -140,25 +145,27 @@ inline T add3Sorted(T a, T b, T c)
 
 // Order-independent interpolation using sorting (see add3Sorted above)
 template <typename T>
-inline nvmath::vector2<T> getInterpolatedSorted(const std::vector<nvmath::vector2<T>>& attributes, nvmath::vec3f coord, nvmath::vec3ui indices)
+inline glm::vec<2, T, glm::qualifier::defaultp> getInterpolatedSorted(const std::vector<glm::vec<2, T, glm::qualifier::defaultp>>& attributes,
+                                                                      glm::vec3  coord,
+                                                                      glm::uvec3 indices)
 {
   return add3Sorted(attributes[indices.x] * coord.x, attributes[indices.y] * coord.y, attributes[indices.z] * coord.z);
 }
 
 template <typename T>
-inline T getInterpolatedSorted(const std::vector<T>& attributes, nvmath::vec3f coord, nvmath::vec3ui indices)
+inline T getInterpolatedSorted(const std::vector<T>& attributes, glm::vec3 coord, glm::uvec3 indices)
 {
   return add3Sorted(attributes[indices.x] * coord.x, attributes[indices.y] * coord.y, attributes[indices.z] * coord.z);
 }
 
 template <typename T>
-inline T getInterpolatedSorted(const T* attributes, nvmath::vec3f coord, nvmath::vec3ui indices)
+inline T getInterpolatedSorted(const T* attributes, glm::vec3 coord, glm::uvec3 indices)
 {
   return add3Sorted(attributes[indices.x] * coord.x, attributes[indices.y] * coord.y, attributes[indices.z] * coord.z);
 }
 
 template <typename T>
-inline T getInterpolatedSorted(const T* attributes, nvmath::vec3f coord)
+inline T getInterpolatedSorted(const T* attributes, glm::vec3 coord)
 {
   return add3Sorted(attributes[0] * coord.x, attributes[1] * coord.y, attributes[2] * coord.z);
 }

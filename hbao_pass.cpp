@@ -20,7 +20,6 @@
 #include "hbao_pass.hpp"
 
 #include <random>
-#include <nvmath/nvmath_glsltypes.h>
 #include <nvvk/pipeline_vk.hpp>
 #include <nvvk/images_vk.hpp>
 #include <nvvk/debug_util_vk.hpp>
@@ -28,6 +27,8 @@
 #include <algorithm>
 
 #include "hbao.h"
+#include "glm/gtc/constants.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 
 #define DEBUGUTIL_SET_NAME(var) debugUtil.setObjectName(var, #var)
@@ -107,7 +108,7 @@ void HbaoPass::init(VkDevice device, nvvk::ResourceAllocator* allocator, nvvk::S
     float Rand2 = static_cast<float>(rng()) / 4294967296.0f;
 
     // Use random rotation angles in [0,2PI/NUM_DIRECTIONS)
-    float Angle       = 2.f * nv_pi * Rand1 / numDir;
+    float Angle       = glm::two_pi<float>() * Rand1 / numDir;
     m_hbaoRandom[i].x = cosf(Angle);
     m_hbaoRandom[i].y = sinf(Angle);
     m_hbaoRandom[i].z = Rand2;
@@ -304,7 +305,7 @@ void HbaoPass::updateUbo(VkCommandBuffer cmd, const Frame& frame, const Settings
   glsl::NVHBAOData hbaoData;
 
   // projection
-  const float* P = view.projectionMatrix.get_value();
+  const float* P = glm::value_ptr(view.projectionMatrix);
 
   float projInfoPerspective[] = {
       2.0f / (P[4 * 0 + 0]),                  // (x) * (R - L)/N
@@ -322,7 +323,7 @@ void HbaoPass::updateUbo(VkCommandBuffer cmd, const Frame& frame, const Settings
 
   int useOrtho       = view.isOrtho ? 1 : 0;
   hbaoData.projOrtho = useOrtho;
-  hbaoData.projInfo  = useOrtho ? projInfoOrtho : projInfoPerspective;
+  hbaoData.projInfo  = useOrtho ? glm::make_vec4(projInfoOrtho) : glm::make_vec4(projInfoPerspective);
 
   float projScale;
   if(useOrtho)
@@ -335,7 +336,7 @@ void HbaoPass::updateUbo(VkCommandBuffer cmd, const Frame& frame, const Settings
   }
 
   hbaoData.projReconstruct =
-      nvmath::vec4f(view.nearPlane * view.farPlane, view.nearPlane - view.farPlane, view.farPlane, view.isOrtho ? 0.0f : 1.0f);
+      glm::vec4(view.nearPlane * view.farPlane, view.nearPlane - view.farPlane, view.farPlane, view.isOrtho ? 0.0f : 1.0f);
 
   // radius
   float R                 = settings.radius * settings.unit2viewspace;
@@ -348,21 +349,21 @@ void HbaoPass::updateUbo(VkCommandBuffer cmd, const Frame& frame, const Settings
   hbaoData.NDotVBias    = std::min(std::max(0.0f, settings.bias), 1.0f);
   hbaoData.AOMultiplier = 1.0f / (1.0f - hbaoData.NDotVBias);
 
-  hbaoData.InvProjMatrix = nvmath::invert(view.projectionMatrix);
+  hbaoData.InvProjMatrix = glm::inverse(view.projectionMatrix);
 
   // resolution
   int quarterWidth  = ((width + 3) / 4);
   int quarterHeight = ((height + 3) / 4);
 
-  hbaoData.InvQuarterResolution  = nvmath::vec2(1.0f / float(quarterWidth), 1.0f / float(quarterHeight));
-  hbaoData.InvFullResolution     = nvmath::vec2(1.0f / float(width), 1.0f / float(height));
-  hbaoData.SourceResolutionScale = nvmath::ivec2(frame.config.sourceWidthScale, frame.config.sourceHeightScale);
-  hbaoData.FullResolution        = nvmath::ivec2(width, height);
-  hbaoData.QuarterResolution     = nvmath::ivec2(quarterWidth, quarterHeight);
+  hbaoData.InvQuarterResolution  = glm::vec2(1.0f / float(quarterWidth), 1.0f / float(quarterHeight));
+  hbaoData.InvFullResolution     = glm::vec2(1.0f / float(width), 1.0f / float(height));
+  hbaoData.SourceResolutionScale = glm::ivec2(frame.config.sourceWidthScale, frame.config.sourceHeightScale);
+  hbaoData.FullResolution        = glm::ivec2(width, height);
+  hbaoData.QuarterResolution     = glm::ivec2(quarterWidth, quarterHeight);
 
   for(int i = 0; i < RANDOM_ELEMENTS; i++)
   {
-    hbaoData.float2Offsets[i] = nvmath::vec4(float(i % 4) + 0.5f, float(i / 4) + 0.5f, 0.0f, 0.0f);
+    hbaoData.float2Offsets[i] = glm::vec4(float(i % 4) + 0.5f, float(i / 4) + 0.5f, 0.0f, 0.0f);
     hbaoData.jitters[i]       = m_hbaoRandom[i];
   }
 
@@ -380,8 +381,8 @@ void HbaoPass::cmdCompute(VkCommandBuffer cmd, const Frame& frame, const Setting
   uint32_t quarterWidth  = ((width + 3) / 4);
   uint32_t quarterHeight = ((height + 3) / 4);
 
-  nvmath::uvec2 gridFull((width + 7) / 8, (height + 7) / 8);
-  nvmath::uvec2 gridQuarter((quarterWidth + 7) / 8, (quarterHeight + 7) / 8);
+  glm::uvec2 gridFull((width + 7) / 8, (height + 7) / 8);
+  glm::uvec2 gridQuarter((quarterWidth + 7) / 8, (quarterHeight + 7) / 8);
 
   VkMemoryBarrier memBarrier = {VK_STRUCTURE_TYPE_MEMORY_BARRIER};
   memBarrier.srcAccessMask   = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -441,7 +442,7 @@ void HbaoPass::cmdCompute(VkCommandBuffer cmd, const Frame& frame, const Setting
 #endif
 
   blur.sharpness              = settings.blurSharpness / settings.unit2viewspace;
-  blur.invResolutionDirection = nvmath::vec2f(1.0f / float(frame.width), 0.0f);
+  blur.invResolutionDirection = glm::vec2(1.0f / float(frame.width), 0.0f);
   vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipelines.blur);
   vkCmdPushConstants(cmd, m_setup.getPipeLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(blur), &blur);
   vkCmdDispatch(cmd, gridFull.x, gridFull.y, 1);
@@ -450,7 +451,7 @@ void HbaoPass::cmdCompute(VkCommandBuffer cmd, const Frame& frame, const Setting
                        &memBarrier, 0, nullptr, 0, nullptr);
 
   vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipelines.blur_apply);
-  blur.invResolutionDirection = nvmath::vec2f(0.0f, 1.0f / float(frame.height));
+  blur.invResolutionDirection = glm::vec2(0.0f, 1.0f / float(frame.height));
   vkCmdPushConstants(cmd, m_setup.getPipeLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(blur), &blur);
   vkCmdDispatch(cmd, gridFull.x, gridFull.y, 1);
 }

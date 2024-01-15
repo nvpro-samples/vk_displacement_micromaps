@@ -26,7 +26,7 @@
 
 #ifdef __cplusplus
 namespace microdisp {
-using namespace nvmath;
+using namespace glm;
 #endif
 
 

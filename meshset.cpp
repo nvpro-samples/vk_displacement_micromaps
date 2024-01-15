@@ -20,6 +20,9 @@
 #include "meshset.hpp"
 #include "meshset_utils.hpp"
 #include "parallel_work.hpp"
+#include "glm/gtc/constants.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
 
 bool MeshSet::hasContiguousIndices() const
 {
@@ -58,7 +61,7 @@ void MeshSet::clearDirectionBoundsGlobals()
   globalUniquePosDirMap.clear();
 }
 
-void MeshSet::setupInstanceGrid(size_t numOrig, size_t copies, uint32_t axis, nvmath::vec3f refShift)
+void MeshSet::setupInstanceGrid(size_t numOrig, size_t copies, uint32_t axis, glm::vec3 refShift)
 {
   srand(2342);
   size_t sq      = 1;
@@ -94,7 +97,7 @@ void MeshSet::setupInstanceGrid(size_t numOrig, size_t copies, uint32_t axis, nv
   meshInstances.resize(numOrig * copies);
   for(size_t c = 1; c < copies; c++)
   {
-    nvmath::vec3f shift = refShift;
+    glm::vec3 shift = refShift;
 
     float u = 0;
     float v = 0;
@@ -156,21 +159,21 @@ void MeshSet::setupInstanceGrid(size_t numOrig, size_t copies, uint32_t axis, nv
       MeshInstance& minst = meshInstances[i + c * numOrig];
       minst               = meshInstances[i];
 
-      nvmath::vec3f translation;
-      nvmath::mat3f rot;
-      nvmath::vec3f scale;
-      minst.xform.get_translation(translation);
-      if (axis & (8|16|32))
+      glm::vec3 translation;
+      // glm::mat3 rot;
+      // glm::vec3 scale;
+      translation = minst.xform[3];
+      if(axis & (8 | 16 | 32))
       {
-        minst.xform.set_translation(nvmath::vec3f(0, 0, 0));
-        nvmath::vec3f mask = { axis & 8 ? 1.0f : 0.0f, axis & 16 ? 1.0f : 0.0f, axis & 32 ? 1.0f : 0.0f};
-        nvmath::vec3f dir(float(rand())/float(RAND_MAX), float(rand())/float(RAND_MAX), float(rand())/float(RAND_MAX));
-        dir = nvmath::nv_max(dir * mask,mask * 0.00001f);
-        float angle = (float(rand())/float(RAND_MAX)) * nv_pi * 2.0f;
-        dir.normalize();
-        minst.xform.rotate(angle, dir);
+        minst.xform[3] = glm::vec4(0, 0, 0, 1);
+        glm::vec3 mask = {axis & 8 ? 1.0f : 0.0f, axis & 16 ? 1.0f : 0.0f, axis & 32 ? 1.0f : 0.0f};
+        glm::vec3 dir(float(rand()) / float(RAND_MAX), float(rand()) / float(RAND_MAX), float(rand()) / float(RAND_MAX));
+        dir         = glm::max(dir * mask, mask * 0.00001f);
+        float angle = (float(rand()) / float(RAND_MAX)) * glm::pi<float>() * 2.0f;
+        dir = glm::normalize(dir);
+        minst.xform = glm::rotate(minst.xform, angle, dir);
       }
-      minst.xform.set_translation(translation + shift);
+      minst.xform[3] = glm::vec4(translation + shift, 1.f);
     }
   }
 }
@@ -187,7 +190,7 @@ void MeshSet::setupLargestInstance()
   for(size_t i = 0; i < meshInstances.size(); i++)
   {
     uint32_t meshInfoId = meshInstances[i].meshID;
-    float    mag        = nvmath::length(meshInstances[i].bbox.diagonal());
+    float    mag        = glm::length(meshInstances[i].bbox.diagonal());
     if(mag > magnitude[meshInfoId])
     {
       magnitude[meshInfoId]                   = mag;
@@ -211,11 +214,11 @@ void MeshSet::setupEdgeLengths(uint32_t numThreads /*= 0*/)
         [&](uint64_t idx, uint32_t thread) {
           float size = 0;
 
-          nvmath::vec3f va = attributes.positions[indices[idx * 3 + mesh.firstIndex + 0] + mesh.firstVertex];
-          nvmath::vec3f vb = attributes.positions[indices[idx * 3 + mesh.firstIndex + 1] + mesh.firstVertex];
-          nvmath::vec3f vc = attributes.positions[indices[idx * 3 + mesh.firstIndex + 2] + mesh.firstVertex];
+          glm::vec3 va = attributes.positions[indices[idx * 3 + mesh.firstIndex + 0] + mesh.firstVertex];
+          glm::vec3 vb = attributes.positions[indices[idx * 3 + mesh.firstIndex + 1] + mesh.firstVertex];
+          glm::vec3 vc = attributes.positions[indices[idx * 3 + mesh.firstIndex + 2] + mesh.firstVertex];
 
-          size = std::max(std::max((va - vb).norm(), (va - vc).norm()), (vb - vc).norm());
+          size = std::max(std::max(glm::length(va - vb), glm::length(va - vc)), glm::length(vb - vc));
 
           maxSizes[thread] = std::max(maxSizes[thread], size);
           avgSizes[thread] += double(size);

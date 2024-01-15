@@ -55,7 +55,7 @@
 ///////////////////////////////////////////////////
 #if defined(__cplusplus)
 
-  #include "half.hpp"
+  #include "glm/detail/type_half.hpp"
   #include <stddef.h>
   
   enum ModelType

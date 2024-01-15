@@ -31,7 +31,7 @@
 
 #ifdef __cplusplus
 namespace microdisp {
-using namespace nvmath;
+using namespace glm;
 #endif
 
 // binding information for descriptor set
