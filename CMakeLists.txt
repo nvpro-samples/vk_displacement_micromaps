@@ -68,7 +68,7 @@ endif()
 # process the rest of some cmake code that needs to be done *after* the packages add
 _add_nvpro_core_lib()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
