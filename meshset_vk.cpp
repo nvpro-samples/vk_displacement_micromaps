@@ -19,7 +19,6 @@
 #include "resources_vk.hpp"
 
 #include <glm/glm.hpp>
-#include <nvvk/structs_vk.hpp>
 #include <nvvk/images_vk.hpp>
 #include <stb_image.h>
 
@@ -746,7 +745,7 @@ void MeshSetVK::initRayTracingScene(ResourcesVK& res, const MeshSet& meshSet, co
     checkAllocSuccess(res, scratch.buffer);
     debugUtil.setObjectName(scratch.buffer, "RTSceneScratch");
 
-    sceneTlasInfo                            = nvvk::make<VkWriteDescriptorSetAccelerationStructureKHR>();
+    sceneTlasInfo                            = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR};
     sceneTlasInfo.accelerationStructureCount = 1;
     sceneTlasInfo.pAccelerationStructures    = &sceneTlas.accel;
 

@@ -22,7 +22,6 @@
 #include "parallel_work.hpp"
 
 #include <nvh/misc.hpp>
-#include <nvvk/structs_vk.hpp>
 
 #include "common.h"
 #include "common_barymap.h"

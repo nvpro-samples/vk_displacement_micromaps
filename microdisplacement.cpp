@@ -1654,7 +1654,7 @@ bool Sample::validateConfig()
     // with the real extension enabled some errors may still be triggered in validation
     // mostly spir-v related
     // you may want to disable the validation here
-    //m_contextInfo.removeInstanceLayer("VK_LAYER_KHRONOS_validation");
+    m_contextInfo.removeInstanceLayer("VK_LAYER_KHRONOS_validation");
 #endif
   }
   else
