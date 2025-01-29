@@ -6,11 +6,11 @@ Message(STATUS "-------------------------------")
 Message(STATUS "Processing Project ${PROJNAME}:")
 
 #####################################################################################
-# Add the custom branch of cgltf as a target before nvpro_core, so that nvpro_core
-# and this project use the custom branch.
-if(NOT TARGET cgltf)
-  add_library(cgltf INTERFACE)
-  target_include_directories(cgltf INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/external/cgltf")
+# Add the custom branch of cgltf as a target before nvpro_core, so that this
+# project uses the custom branch.
+if(NOT TARGET cgltf-dmms)
+  add_library(cgltf-dmms INTERFACE)
+  target_include_directories(cgltf-dmms INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/external/cgltf")
 endif()
 
 #####################################################################################
@@ -153,7 +153,7 @@ endif()
 # Linkage
 #
 
-target_link_libraries(${PROJNAME} ${PLATFORM_LIBRARIES} nvpro_core bary_core bary_utils)
+target_link_libraries(${PROJNAME} ${PLATFORM_LIBRARIES} cgltf-dmms nvpro_core bary_core bary_utils)
 
 foreach(DEBUGLIB ${LIBRARIES_DEBUG})
   target_link_libraries(${PROJNAME} debug ${DEBUGLIB})
