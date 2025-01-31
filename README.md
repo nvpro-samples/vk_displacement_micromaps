@@ -1,3 +1,9 @@
+# DEPRECATED
+
+The **NVIDIA RTX Mega Geometry** technology supercedes displaced Micro-Meshes. This repository is archived as result.
+
+Please have a look at this new sample [vk_tessellated_clusters](https://github.com/nvpro-samples/vk_tessellated_clusters) that showcases real-time adaptive tessellation with displacement for ray tracing and rasterization.
+
 # vk_displacement_micromaps
 
 This is a sample for rendering models using displacement micromaps resulting in a displaced [NVIDIA Micro-Mesh](https://developer.nvidia.com/rtx/ray-tracing/micro-mesh). Micromeshes are a new geometry representation to allow high geometric complexity with a reduced memory footprint and fast BVH build times for ray-tracing.

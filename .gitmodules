@@ -6,3 +6,7 @@
 	path = external/bary_core
 	url = https://github.com/NVIDIAGameWorks/Displacement-MicroMap-BaryFile.git
 	branch = main
+[submodule "nvpro_core"]
+	path = nvpro_core
+	url = https://github.com/nvpro-samples/nvpro_core.git
+	branch = master
